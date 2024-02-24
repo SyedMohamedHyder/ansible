@@ -1,0 +1,59 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ansible-target
+  labels:
+    app.kubernetes.io/name: ansible-target
+    app.kubernetes.io/component: target
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ansible-target
+      app.kubernetes.io/component: target
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ansible-target
+        app.kubernetes.io/component: target
+    spec:
+      containers:
+      - name: ansible-target
+        image: syedhyder1362k/ssh:centos7
+        ports:
+        - name: ssh
+          containerPort: 22
+        volumeMounts:
+        - name: ansible-home
+          mountPath: /home/ansible/.ssh
+          subPath: .ssh
+        securityContext:
+          runAsUser: 5000
+          runAsGroup: 5000
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=3 localhost exit
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      securityContext:
+        fsGroup: 5000
+      volumes:
+      - name: ansible-home
+        persistentVolumeClaim:
+          claimName: ansible-home
