@@ -1,0 +1,47 @@
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ssh-keys-generator
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 4
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ssh-keys-generator-job
+      app.kubernetes.io/component: ssh-keys-generator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ssh-keys-generator-job
+        app.kubernetes.io/component: ssh-keys-generator
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: ssh-keys-generator
+        image: syedhyder1362k/ssh:centos7
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Username: $(whoami)"
+          echo "UID: $(id -u)"
+          mkdir -p /home/ansible/.ssh/
+          ssh-keygen -q -t rsa -N '' -f /home/ansible/.ssh/id_rsa <<<y >/dev/null 2>&1
+          echo "Successfully generated the ssh keys"
+          cp /home/ansible/.ssh/id_rsa.pub /home/ansible/.ssh/authorized_keys
+          chown -R 5000:5000 /home/ansible/.ssh
+          chmod -R 700 /home/ansible/.ssh
+          echo "Updated the permissions of .ssh"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: ansible-home
+          mountPath: /home/ansible
+      volumes:
+      - name: ansible-home
+        persistentVolumeClaim:
+          claimName: ansible-home
