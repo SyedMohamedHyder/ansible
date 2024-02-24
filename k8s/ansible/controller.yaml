@@ -22,11 +22,15 @@ spec:
       containers:
       - name: ansible-controller
         image: syedhyder1362k/ansible:centos7
+        workingDir: /home/ansible/workplace
         command:
         - /bin/bash
         - -c
         args:
         - "while true; do sleep 60; done;"
+        env:
+        - name: ANSIBLE_CONFIG
+          value: /home/ansible/workplace/ansible.cfg
         ports:
         - name: ssh
           containerPort: 22
@@ -34,6 +38,8 @@ spec:
         - name: ansible-home
           mountPath: /home/ansible/.ssh
           subPath: .ssh
+        - name: ansible-shared
+          mountPath: /home/ansible/workplace
         securityContext:
           runAsUser: 5000
           runAsGroup: 5000
@@ -62,3 +68,6 @@ spec:
       - name: ansible-home
         persistentVolumeClaim:
           claimName: ansible-home
+      - name: ansible-shared
+        persistentVolumeClaim:
+          claimName: ansible-shared
