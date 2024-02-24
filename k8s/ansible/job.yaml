@@ -17,7 +17,7 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: ssh-keys-generator
-        image: syedhyder1362k/ssh:centos7
+        image: syedhyder1362k/ansible:centos7
         command:
         - /bin/bash
         - -c
