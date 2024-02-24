@@ -1,0 +1,27 @@
+FROM centos:7
+
+LABEL maintainer="K Syed Mohamed Hyder<syedhyder1362k@gmail.com>"
+
+ARG proxy
+
+ENV http_proxy=$proxy
+ENV https_proxy=$proxy
+ENV HTTP_PROXY=$proxy
+ENV HTTPS_PROXY=$proxy
+ENV ANSIBLE_CONFIG=/home/ansible/ansible.cfg
+
+RUN yum update -y && yum install -y epel-release && yum clean all
+RUN yum -y install openssh openssh-server openssh-clients && \
+    yum -y clean all
+RUN yum install -y ansible && yum clean all
+
+RUN useradd -ms /bin/bash ansible
+USER ansible
+
+WORKDIR /home/ansible
+
+RUN cp -r /etc/ansible/* /home/ansible/
+
+EXPOSE 22
+
+ENTRYPOINT ["ansible-playbook"]
