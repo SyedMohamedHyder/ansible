@@ -1,0 +1,17 @@
+FROM python:3.10.13-alpine
+
+RUN pip install ansible
+
+LABEL maintainer="K Syed Mohamed Hyder<syedhyder1362k@gmail.com>"
+
+RUN adduser -D -s /bin/ash ansible \
+    && chown -R ansible:ansible /home/ansible
+
+USER ansible
+
+WORKDIR /home/ansible
+
+RUN ansible-config init --disabled > /home/ansible/ansible.cfg
+ENV ANSIBLE_CONFIG=/home/ansible/ansible.cfg
+
+ENTRYPOINT ["ansible"]
