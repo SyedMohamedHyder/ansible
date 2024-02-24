@@ -8,10 +8,6 @@ spec:
   completions: 1
   parallelism: 1
   backoffLimit: 4
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: ssh-keys-generator-job
-      app.kubernetes.io/component: ssh-keys-generator
   template:
     metadata:
       labels:
