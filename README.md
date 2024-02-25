@@ -12,7 +12,7 @@ docker pull syedhyder1362k/ansible:python3.10.13-alpine
 The centos based ansible image is also available which can be used as follows.
 
 ```bash
-docker run --name ansible -v /path/to/.ssh:/home/ansible/.ssh -v /path/to/ansible-data:/home/ansible syedhyder1362k/ansible-playbook:python3.10.13-alpine \<playbook-path\>
+docker run --name ansible -v /path/to/.ssh:/home/ansible/.ssh -v /path/to/ansible-data:/home/ansible syedhyder1362k/ansible-playbook:python3.10.13-alpine <playbook-path>
 ```
 
 I have included a folder k8s/ansible where you can find all the manifests that serve as a good starting point with which you can play around with ansible.
