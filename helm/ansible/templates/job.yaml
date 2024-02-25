@@ -1,0 +1,46 @@
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ansible.fullname" . }}
+  labels:
+    {{- include "ansible.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ssh-keys-generator
+spec:
+  completions: {{ .Values.job.completions }}
+  parallelism: {{ .Values.job.parallelism }}
+  backoffLimit: {{ .Values.job.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "ansible.labels" . | nindent 8 }}
+        app.kubernetes.io/component: ssh-keys-generator
+    spec:
+      restartPolicy: {{ .Values.job.restartPolicy }}
+      containers:
+      - name: ssh-keys-generator
+        image: "{{ .Values.job.image.repository }}:{{ .Values.job.image.tag }}"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo "Username: $(whoami)"
+          echo "UID: $(id -u)"
+          mkdir -p /home/ansible/.ssh/
+          ssh-keygen -q -t rsa -N '' -f /home/ansible/.ssh/id_rsa <<<y >/dev/null 2>&1
+          echo "Successfully generated the ssh keys"
+          cp /home/ansible/.ssh/id_rsa.pub /home/ansible/.ssh/authorized_keys
+          chown -R 5000:5000 /home/ansible/.ssh
+          chmod -R 700 /home/ansible/.ssh
+          echo "Updated the permissions of .ssh"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: ansible-home
+          mountPath: /home/ansible
+      volumes:
+      - name: ansible-home
+        persistentVolumeClaim:
+          claimName: {{ include "ansible.home.pvc" . }}

@@ -1,0 +1,104 @@
+# PersistentVolumeClaim configuration for ansibleHome
+# The ansible-home's .ssh folder is shared with all the pods,
+# thereby generating the ssh certs and setting proper permissions on the .ssh directory. 
+ansibleHome:
+  # Access modes for the PersistentVolumeClaim
+  accessModes:
+    - ReadWriteMany
+  # Resource requests for storage
+  resources:
+    # Requested storage size
+    requests:
+      storage: 1Gi
+  # Storage class name for the PersistentVolumeClaim
+  storageClassName: hostpath
+
+# PersistentVolume configuration for ansibleShared
+# This pv is responsible for mounting the shared path from the host to the workdir in the container.
+# You will have to update this configuration according to your local to ensure proper mounting of the directory.
+ansibleShared:
+  # Access modes for the PersistentVolume
+  accessModes:
+    - ReadWriteOnce
+  # Capacity configuration for the PersistentVolume
+  capacity:
+    # Storage capacity
+    storage: 1Gi
+  # Host path configuration for the PersistentVolume
+  hostPath:
+    # Path on the host machine
+    # Update this path with the host path where you have placed all the ansible related files like,
+    # ansible.cfg, roles, hosts etc.
+    # The ANSIBLE_CONFIG env has been set to point to an ansible.cfg file located under this directory.
+    # If there is no ansible.cfg under this directory, update ANSIBLE_CONFIG in your pod to point to
+    # wherever you have mounted the airflow.cfg.
+    path: /C/Users/kunmeer/go/src/github.com/ansible/shared
+  # Storage class name for the PersistentVolume
+  storageClassName: manual
+
+# Job configuration for the ssh-keys-generator.
+# The following configurations will be set to the ssh-keys-generator job.
+job:
+  # Number of desired completions for the job
+  completions: 1
+  # Number of parallel pods to run
+  parallelism: 1
+  # Number of retries before considering a job as failed
+  backoffLimit: 4
+  # Restart policy for the job
+  restartPolicy: OnFailure
+  # Image configuration for the job
+  image:
+    # Repository for the Docker image
+    repository: "syedhyder1362k/ansible"
+    # Tag for the Docker image
+    tag: "ubuntu24.04"
+
+# Configuration for targets
+targets:
+    # Unique identifier for the target, typically representing the operating system or environment
+    # For example, 'centos' represents a target running CentOS operating system
+    # Note: This id must be unique across all targets as it will be used in the name of the deployment.
+    # Even if multiple targets have the same operating system, they should have different ids.
+  - id: centos
+    image:
+      # Repository for the Docker image
+      repository: "syedhyder1362k/ssh"
+      # Tag for the Docker image
+      tag: "centos7"
+  - id: ubuntu
+    image:
+      # Repository for the Docker image
+      repository: "syedhyder1362k/ssh"
+      # Tag for the Docker image
+      tag: "ubuntu24.04"
+
+# Configuration for target resources and readiness probe
+target:
+  # Resource limits and requests for the target
+  resources:
+    # CPU limits and requests
+    limits:
+      cpu: "1"
+    # Memory limits and requests
+    requests:
+      memory: "512Mi"
+  # Readiness probe configuration for the target
+  readinessProbe:
+    # Exec probe configuration
+    exec:
+      command:
+      - /bin/sh
+      - -c
+      - |
+        ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=3 localhost exit
+    # Initial delay before starting the probe
+    initialDelaySeconds: 10
+    # Time between probe attempts
+    periodSeconds: 5
+    # Timeout for each probe attempt
+    timeoutSeconds: 3
+    # Number of successful probe attempts required for success
+    successThreshold: 1
+    # Number of failed probe attempts required for failure
+    failureThreshold: 3

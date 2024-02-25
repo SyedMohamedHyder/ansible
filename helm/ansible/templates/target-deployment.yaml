@@ -1,0 +1,54 @@
+{{- range .Values.targets }}
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ansible.fullname" $ }}-target-{{ .id }}
+  labels:
+    {{- include "ansible.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: target-{{ .id }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ansible.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: target-{{ .id }}
+  template:
+    metadata:
+      labels:
+        {{- include "ansible.labels" $ | nindent 8 }}
+        app.kubernetes.io/component: target-{{ .id }}
+    spec:
+      containers:
+      - name: {{ include "ansible.fullname" $ }}-target-{{ .id }}
+        image: "{{ .image.repository }}:{{ .image.tag }}"
+        ports:
+        - name: ssh
+          containerPort: 22
+        volumeMounts:
+        - name: ansible-home
+          mountPath: /home/ansible/.ssh
+          subPath: .ssh
+        securityContext:
+          runAsUser: 5000
+          runAsGroup: 5000
+        resources:
+          {{- if not $.Values.target.resources }}
+            {{- include "ansible.defaultResources" $ | nindent 10 }}
+          {{- else }}
+            {{- toYaml $.Values.target.resources | nindent 10 }}
+          {{- end }}
+        readinessProbe:
+          {{- if not $.Values.target.readinessProbe }}
+            {{- include "ansible.target.readinessProbe" $ | nindent 10 }}
+          {{- else }}
+            {{- toYaml $.Values.target.readinessProbe | nindent 10 }}
+          {{- end }}
+      securityContext:
+        fsGroup: 5000
+      volumes:
+      - name: ansible-home
+        persistentVolumeClaim:
+          claimName: {{ include "ansible.home.pvc" $ }}
+{{- end }}
