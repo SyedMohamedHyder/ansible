@@ -1,0 +1,31 @@
+FROM ubuntu:24.04
+
+LABEL maintainer="K Syed Mohamed Hyder<syedhyder1362k@gmail.com>"
+
+ARG proxy
+
+ENV http_proxy=$proxy
+ENV https_proxy=$proxy
+ENV HTTP_PROXY=$proxy
+ENV HTTPS_PROXY=$proxy
+ENV ANSIBLE_CONFIG=/home/ansible/ansible.cfg
+
+RUN apt-get update -y && \
+    apt-get -y install ssh openssh-server openssh-client && \
+    apt-get -y clean
+
+RUN ssh-keygen -A
+RUN useradd -u 5000 -m -s /bin/bash ansible
+RUN chown -R ansible:ansible /etc/ssh
+
+USER ansible
+
+RUN mkdir -p /home/ansible/.ssh && \
+    chown ansible:ansible /home/ansible/.ssh && \
+    chmod 700 /home/ansible/.ssh
+
+WORKDIR /home/ansible
+
+EXPOSE 22
+
+ENTRYPOINT ["/usr/sbin/sshd", "-D"]
