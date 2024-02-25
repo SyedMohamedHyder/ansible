@@ -50,8 +50,5 @@ jobs:
         context: .
         push: true
         file: docker/${{ matrix.image_matrix.image }}/Dockerfile.${{ matrix.image_matrix.tag }}
-        platforms: linux/amd64,linux/arm64
         tags: |
           syedhyder1362k/${{ matrix.image_matrix.image }}:${{ github.ref_name }}-${{ matrix.image_matrix.tag }}
-        build-args: |
-          proxy=http://proxy.houston.hpecorp.net:8080/
