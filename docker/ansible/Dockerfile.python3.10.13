@@ -2,9 +2,17 @@ FROM python:3.10.13
 
 LABEL maintainer="K Syed Mohamed Hyder<syedhyder1362k@gmail.com>"
 
+ARG proxy
+
+ENV http_proxy=$proxy
+ENV https_proxy=$proxy
+ENV HTTP_PROXY=$proxy
+ENV HTTPS_PROXY=$proxy
+ENV ANSIBLE_CONFIG=/home/ansible/ansible.cfg
+
 RUN pip install ansible
 
-RUN useradd -ms /bin/bash ansible \
+RUN useradd -u 5000 -ms /bin/bash ansible \
     && chown -R ansible:ansible /home/ansible
 
 USER ansible
