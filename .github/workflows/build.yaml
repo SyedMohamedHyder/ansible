@@ -2,8 +2,8 @@ name: Build and Push Docker Images
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - '*'
 
 jobs:
   setup:
@@ -11,22 +11,16 @@ jobs:
     outputs:
       image_matrix: ${{ steps.generate-image-matrix.outputs.image_matrix }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Generate Image Matrix
-        id: generate-image-matrix
-        run: |
-          image_matrix=()
-          
-          for file in $(find docker -type f -name "Dockerfile.*"); do
-            image_name=$(echo "$file" | cut -d'/' -f2)
-            tag=$(echo "$file" | cut -d'/' -f3 | sed 's/^Dockerfile\.//')
+    - name: Generate Image Matrix
+      id: generate-image-matrix
+      run: |
+        mapfile -t image_matrix < <(find docker -type f -name "Dockerfile.*" -exec sh -c \
+          'printf "{\"image\": \"%s\", \"tag\": \"%s\"}\n" "$(basename "$(dirname "{}")")" "$(basename "{}" | sed 's/^Dockerfile\.//')"' \;)
 
-            image_matrix+=("{\"image\": \"$image_name\", \"tag\": \"$tag\"}")
-          done
-
-          echo "image_matrix=$(IFS=','; echo "[${image_matrix[*]}]")" >> $GITHUB_OUTPUT
+        echo "image_matrix=$(IFS=','; echo "[${image_matrix[*]}]")" >> $GITHUB_OUTPUT
 
   build:
     needs: setup
@@ -35,19 +29,24 @@ jobs:
       matrix:
         image_matrix: ${{fromJson(needs.setup.outputs.image_matrix)}}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Docker Login
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
 
-      - name: Build and Push Docker Images
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          file: docker/${{ matrix.image_matrix.image }}/Dockerfile.${{ matrix.image_matrix.tag }}
-          tags: syedhyder1362k/${{ matrix.image_matrix.image }}:${{ matrix.image_matrix.tag }}
+    - name: Docker Login
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+
+    - name: Build and Push Docker Images
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        file: docker/${{ matrix.image_matrix.image }}/Dockerfile.${{ matrix.image_matrix.tag }}
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          syedhyder1362k/${{ matrix.image_matrix.image }}:${{ github.ref_name }}-${{ matrix.image_matrix.tag }}
