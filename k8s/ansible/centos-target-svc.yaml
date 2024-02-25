@@ -5,8 +5,8 @@ kind: Service
 metadata:
   labels:
     app.kubernetes.io/component: target
-    app.kubernetes.io/name: ansible-target
-  name: ansible-target
+    app.kubernetes.io/name: ansible-target-centos
+  name: ansible-target-centos
 spec:
   type: ClusterIP
   ports:
@@ -15,4 +15,4 @@ spec:
     targetPort: ssh
   selector:
     app.kubernetes.io/component: target
-    app.kubernetes.io/name: ansible-target
+    app.kubernetes.io/name: ansible-target-centos

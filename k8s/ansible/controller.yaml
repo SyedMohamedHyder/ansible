@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: ansible-controller
-        image: syedhyder1362k/ansible:centos7
+        image: syedhyder1362k/ansible:python3.10.13
         workingDir: /home/ansible/workplace
         command:
         - /bin/bash
@@ -56,7 +56,8 @@ spec:
             - /bin/sh
             - -c
             - |
-              ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=3 ansible-target exit
+              ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=3 ansible-target-centos exit
+              ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=3 ansible-target-ubuntu exit
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
