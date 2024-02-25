@@ -20,6 +20,5 @@ USER ansible
 WORKDIR /home/ansible
 
 RUN ansible-config init --disabled > /home/ansible/ansible.cfg
-ENV ANSIBLE_CONFIG=/home/ansible/ansible.cfg
 
 ENTRYPOINT ["ansible-playbook"]

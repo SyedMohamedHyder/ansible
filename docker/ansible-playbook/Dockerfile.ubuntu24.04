@@ -33,4 +33,4 @@ RUN ansible-config init --disabled > /home/ansible/ansible.cfg
 
 EXPOSE 22
 
-ENTRYPOINT ["ansible"]
+ENTRYPOINT ["ansible-playbook"]
