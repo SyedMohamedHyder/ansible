@@ -2,6 +2,7 @@
 Learn Ansible with me!
 
 The images in this repo are available in syedhyder1362k registry in DockerHub.
+An automated workflow has been deployed, which will build and push the images whenever a tag is created. You can have a look at it to learn more about how to automate the process.
 
 ```bash
 docker pull syedhyder1362k/ansible:python3.10.13
