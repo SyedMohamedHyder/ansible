@@ -1,8 +1,8 @@
 FROM python:3.10.13
 
-RUN pip install ansible
-
 LABEL maintainer="K Syed Mohamed Hyder<syedhyder1362k@gmail.com>"
+
+RUN pip install ansible
 
 RUN useradd -ms /bin/bash ansible \
     && chown -R ansible:ansible /home/ansible

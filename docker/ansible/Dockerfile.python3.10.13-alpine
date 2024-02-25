@@ -1,8 +1,8 @@
 FROM python:3.10.13-alpine
 
-RUN pip install ansible
-
 LABEL maintainer="K Syed Mohamed Hyder<syedhyder1362k@gmail.com>"
+
+RUN pip install ansible
 
 RUN adduser -D -s /bin/ash ansible \
     && chown -R ansible:ansible /home/ansible
