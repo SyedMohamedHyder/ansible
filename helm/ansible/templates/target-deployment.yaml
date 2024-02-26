@@ -23,6 +23,14 @@ spec:
       containers:
       - name: "{{ include "ansible.fullname" $ }}-{{ include "ansible.target.name" . }}"
         image: "{{ .image.repository }}:{{ .image.tag }}"
+        {{- if .command }}
+        command:
+        {{- toYaml .command | nindent 8 }}
+        {{- end }}
+        {{- if .args }}
+        args:
+        {{- toYaml .args | nindent 8 }}
+        {{- end }}
         ports:
         - name: ssh
           containerPort: 22
