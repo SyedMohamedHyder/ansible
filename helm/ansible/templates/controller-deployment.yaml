@@ -48,11 +48,11 @@ spec:
         - name: ansible-home
           mountPath: {{ .Values.controller.home | default "/home/ansible" }}/.ssh
           subPath: .ssh
-        - name: ansible-workplace
+        - name: workplace
           mountPath: {{ .Values.controller.home | default "/home/ansible" }}/workplace
         securityContext:
-          runAsUser: {{ .Values.controller.securityContext.runAsUser | default 5000 }}
-          runAsGroup: {{ .Values.controller.securityContext.runAsGroup | default 5000 }}
+          runAsUser: {{ .Values.controller.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.controller.securityContext.runAsGroup }}
         resources:
           {{- if not .Values.controller.resources }}
             {{- include "ansible.defaultResources" . | nindent 10 }}
@@ -66,11 +66,11 @@ spec:
             {{- toYaml .Values.controller.readinessProbe | nindent 10 }}
           {{- end }}
       securityContext:
-        fsGroup: {{ .Values.controller.securityContext.fsGroup | default 5000 }}
+        fsGroup: {{ .Values.controller.securityContext.fsGroup }}
       volumes:
       - name: ansible-home
         persistentVolumeClaim:
           claimName: {{ include "ansible.sharedTargetHome.pvc" . }}
-      - name: ansible-workplace
+      - name: workplace
         persistentVolumeClaim:
           claimName: {{ include "ansible.workplace.pvc" . }}

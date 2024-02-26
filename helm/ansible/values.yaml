@@ -1,7 +1,7 @@
-# PersistentVolumeClaim configuration for ansibleHome
-# The ansible-home's .ssh folder is shared with all the pods,
+# PersistentVolumeClaim configuration for sharedTargetHome
+# The target user's .ssh folder is shared with all the pods,
 # thereby generating the ssh certs and setting proper permissions on the .ssh directory. 
-ansibleHome:
+sharedTargetHome:
   # Access modes for the PersistentVolumeClaim
   accessModes:
     - ReadWriteMany
@@ -13,10 +13,10 @@ ansibleHome:
   # Storage class name for the PersistentVolumeClaim
   storageClassName: hostpath
 
-# PersistentVolume configuration for ansibleShared
-# This pv is responsible for mounting the shared path from the host to the workdir in the container.
+# PersistentVolume configuration for workplace
+# This pv is responsible for mounting the workplace path from the host to the workdir in the container.
 # You will have to update this configuration according to your local to ensure proper mounting of the directory.
-ansibleShared:
+workplace:
   # Access modes for the PersistentVolume
   accessModes:
     - ReadWriteOnce
@@ -32,7 +32,7 @@ ansibleShared:
     # The ANSIBLE_CONFIG env has been set to point to an ansible.cfg file located under this directory.
     # If there is no ansible.cfg under this directory, update ANSIBLE_CONFIG in your pod to point to
     # wherever you have mounted the airflow.cfg.
-    path: /C/Users/kunmeer/go/src/github.com/ansible/shared
+    path: /C/Users/kunmeer/go/src/github.com/ansible/workplace
   # Storage class name for the PersistentVolume
   storageClassName: manual
 
@@ -55,6 +55,10 @@ job:
     tag: "ubuntu24.04"
 
 # Configuration for targets
+# The target images must mandatorily have an ssh server running in them.
+# They should have a user called ansible with userID 5000 and the user's home directory created.
+# If you want a different user, please update the readiness probe of the controller and
+# the job's script to update permissions of the .ssh folder accordingly.
 targets:
     # Unique identifier for the target, typically representing the operating system or environment
     # For example, 'centos' represents a target running CentOS operating system
@@ -66,23 +70,33 @@ targets:
       repository: "syedhyder1362k/ssh"
       # Tag for the Docker image
       tag: "centos7"
+    # Command for the target container
+    command: []
+    # args for the target container
+    args: []
   - id: ubuntu
     image:
       # Repository for the Docker image
       repository: "syedhyder1362k/ssh"
       # Tag for the Docker image
       tag: "ubuntu24.04"
+    # Command for the target container
+    command: []
+    # args for the target container
+    args: []
 
 # Configuration for target resources and readiness probe
 target:
-  # Resource limits and requests for the target
+  # Resource limits and requests
   resources:
-    # CPU limits and requests
+    # Limits for CPU and memory
     limits:
       cpu: "1"
-    # Memory limits and requests
-    requests:
       memory: "512Mi"
+    # Requests for CPU and memory
+    requests:
+      cpu: "0.5"
+      memory: "256Mi"
   # Readiness probe configuration for the target
   readinessProbe:
     # Exec probe configuration
@@ -98,6 +112,79 @@ target:
     periodSeconds: 5
     # Timeout for each probe attempt
     timeoutSeconds: 3
+    # Number of successful probe attempts required for success
+    successThreshold: 1
+    # Number of failed probe attempts required for failure
+    failureThreshold: 3
+
+# Configuration for the ansible-controller
+controller:
+  # Docker image details
+  image:
+    # Repository of the Docker image
+    repository: syedhyder1362k/ansible
+    # Tag of the Docker image
+    tag: python3.10.13
+  # Home directory for the ansible-controller
+  # This directory should be accessible by securityContext's runAsUser and runAsGroup.
+  # The runAsUser and runAsGroup specify the user and group under which the container runs,
+  # and the fsGroup specifies the group for the volume mounts.
+  # It's important for the specified home directory to be accessible by both the user and group
+  # defined in the securityContext to ensure proper permissions and access within the container.
+  home: /home/ansible
+  # Command to run in the container
+  command:
+    - /bin/bash
+    - -c
+  # Arguments for the command
+  args:
+    - "while true; do sleep 60; done;"
+  # Environment variables for the container (empty list in this example)
+  env: []
+  # Security context configuration
+  # Run as user, runAsGroup, and fsGroup define the security context for the ansible-controller container.
+  # The specified runAsUser and runAsGroup values indicate the user and group under which the container runs.
+  # Additionally, the fsGroup specifies the group for the volume mounts.
+  # It's important to ensure that the user/group specified has access to the home directory,
+  # as the home directory is often used for storing configuration files and other essential resources.
+  # If a different user is used, ensure that appropriate permissions are granted to access the specified home directory.
+  securityContext:
+    # Run as user specifies the user ID that the container should run as.
+    # If changed, the home .
+    runAsUser: 5000
+    # Run as group specifies the group ID that the container should run as.
+    runAsGroup: 5000
+    # fsGroup specifies the group ID applied to all files and directories created by the container in the shared filesystem.
+    # This ensures that files created by the container are accessible by the specified group, which can be useful for shared access permissions.
+    fsGroup: 5000
+  # Resource limits and requests
+  resources:
+    # Limits for CPU and memory
+    limits:
+      cpu: "1"
+      memory: "512Mi"
+    # Requests for CPU and memory
+    requests:
+      cpu: "0.5"
+      memory: "256Mi"
+  # Readiness probe configuration for the controller
+  # Readiness probe configuration for the controller
+  # By default, the readiness probe checks the availability of the controller by executing an Ansible ping command
+  # on all available targets. This probe ensures that the controller is ready to handle requests before.
+  readinessProbe:
+    # Exec probe configuration
+    exec:
+      command:
+      - ansible
+      - all
+      - -m
+      - ping
+    # Initial delay before starting the probe
+    initialDelaySeconds: 10
+    # Time between probe attempts
+    periodSeconds: 5
+    # Timeout for each probe attempt
+    timeoutSeconds: 5
     # Number of successful probe attempts required for success
     successThreshold: 1
     # Number of failed probe attempts required for failure

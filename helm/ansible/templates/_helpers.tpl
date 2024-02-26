@@ -142,16 +142,13 @@ Helper function to provide default values for controller readinessProbe if not s
 {{- define "ansible.controller.readinessProbe" -}}
 exec:
   command:
-  - /bin/sh
-  - -c
-  - |
-  {{- range .Values.targets }}
-    ssh -i {{ $.Values.controller.home }}/.ssh/id_rsa -q -o StrictHostKeyChecking=no \
-      -o BatchMode=yes -o ConnectTimeout=3 {{ include "ansible.fullname" $ }}-{{ include "ansible.target.name" . }} exit
-  {{- end }}
+  - ansible
+  - all
+  - -m
+  - ping
 initialDelaySeconds: 10
 periodSeconds: 5
-timeoutSeconds: 3
+timeoutSeconds: 5
 successThreshold: 1
 failureThreshold: 3
 {{- end }}
