@@ -1,0 +1,17 @@
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ansible-workplace
+  labels:
+    app.kubernetes.io/name: ansible-workplace-pv
+    app.kubernetes.io/component: ansible-workplace
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /C/Users/kunmeer/go/src/github.com/ansible/workplace
+  storageClassName: manual
