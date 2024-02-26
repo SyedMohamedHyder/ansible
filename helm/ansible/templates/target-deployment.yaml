@@ -4,25 +4,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "ansible.fullname" $ }}-target-{{ .id }}
+  name: "{{ include "ansible.fullname" $ }}-{{ include "ansible.target.name" . }}"
   labels:
     {{- include "ansible.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: target-{{ .id }}
+    app.kubernetes.io/component: {{ include "ansible.target.name" . }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       {{- include "ansible.selectorLabels" $ | nindent 6 }}
-      app.kubernetes.io/component: target-{{ .id }}
+      app.kubernetes.io/component: {{ include "ansible.target.name" . }}
   template:
     metadata:
       labels:
         {{- include "ansible.labels" $ | nindent 8 }}
-        app.kubernetes.io/component: target-{{ .id }}
+        app.kubernetes.io/component: {{ include "ansible.target.name" . }}
     spec:
       containers:
-      - name: {{ include "ansible.fullname" $ }}-target-{{ .id }}
+      - name: "{{ include "ansible.fullname" $ }}-{{ include "ansible.target.name" . }}"
         image: "{{ .image.repository }}:{{ .image.tag }}"
+        {{- if .command }}
+        command:
+        {{- toYaml .command | nindent 8 }}
+        {{- end }}
+        {{- if .args }}
+        args:
+        {{- toYaml .args | nindent 8 }}
+        {{- end }}
         ports:
         - name: ssh
           containerPort: 22
@@ -50,5 +58,5 @@ spec:
       volumes:
       - name: ansible-home
         persistentVolumeClaim:
-          claimName: {{ include "ansible.home.pvc" $ }}
+          claimName: {{ include "ansible.sharedTargetHome.pvc" $ }}
 {{- end }}
