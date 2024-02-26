@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   ansible:
   - apiVersion: v2
+    appVersion: 1.4.0
+    created: "2024-02-26T11:46:57.365499354Z"
+    description: A Helm chart as an ansible playground
+    digest: a1ac4c5b27222faf1c4f9803cc0f398c9f22905a8d249692df59f30d1cf8a593
+    name: ansible
+    type: application
+    urls:
+    - https://github.com/SyedMohamedHyder/ansible/releases/download/ansible-1.4.0/ansible-1.4.0.tgz
+    version: 1.4.0
+  - apiVersion: v2
     appVersion: 1.3.0
     created: "2024-02-26T11:08:39.018136674Z"
     description: A Helm chart as an ansible playground
@@ -21,4 +31,4 @@ entries:
     urls:
     - https://github.com/SyedMohamedHyder/ansible/releases/download/ansible-1.0.0/ansible-1.0.0.tgz
     version: 1.0.0
-generated: "2024-02-26T11:08:39.018144549Z"
+generated: "2024-02-26T11:46:57.365516606Z"
