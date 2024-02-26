@@ -51,38 +51,38 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the ansible home to use
+Create the name of the shared target home to use
 */}}
-{{- define "ansible.home" -}}
+{{- define "ansible.sharedTargetHome" -}}
 {{- include "ansible.fullname" . }}-home
 {{- end }}
 
 {{/*
-Create the name of the ansible home pvc to use
+Create the name of the shared target pvc to use
 */}}
-{{- define "ansible.home.pvc" -}}
-{{- include "ansible.home" . }}-pvc
+{{- define "ansible.sharedTargetHome.pvc" -}}
+{{- include "ansible.sharedTargetHome" . }}-pvc
 {{- end }}
 
 {{/*
-Create the name of the shared ansible
+Create the name of the workplace ansible
 */}}
-{{- define "ansible.shared" -}}
-{{- include "ansible.fullname" . }}-shared
+{{- define "ansible.workplace" -}}
+{{- include "ansible.fullname" . }}-workplace
 {{- end }}
 
 {{/*
-Create the name of the shared ansible pv to use
+Create the name of the workplace ansible pv to use
 */}}
-{{- define "ansible.shared.pv" -}}
-{{- include "ansible.shared" . }}-pv
+{{- define "ansible.workplace.pv" -}}
+{{- include "ansible.workplace" . }}-pv
 {{- end }}
 
 {{/*
-Create the name of the shared ansible pvc to use
+Create the name of the workplace ansible pvc to use
 */}}
-{{- define "ansible.shared.pvc" -}}
-{{- include "ansible.shared" . }}-pvc
+{{- define "ansible.workplace.pvc" -}}
+{{- include "ansible.workplace" . }}-pvc
 {{- end }}
 
 {{/*
@@ -98,6 +98,13 @@ requests:
 {{- end }}
 
 {{/*
+Helper function to provide name of the target.
+*/}}
+{{- define "ansible.target.name" -}}
+target-{{ .id }}
+{{- end }}
+
+{{/*
 Helper function to provide default values for target readinessProbe if not specified in values.yaml
 */}}
 {{- define "ansible.target.readinessProbe" -}}
@@ -107,6 +114,41 @@ exec:
   - -c
   - |
     ssh -q -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=3 localhost exit
+initialDelaySeconds: 10
+periodSeconds: 5
+timeoutSeconds: 3
+successThreshold: 1
+failureThreshold: 3
+{{- end }}
+
+{{/*
+Helper function to provide default command for controller if not specified in values.yaml
+*/}}
+{{- define "ansible.controller.command" -}}
+- /bin/sh
+- -c
+{{- end }}
+
+{{/*
+Helper function to provide default args for controller if not specified in values.yaml
+*/}}
+{{- define "ansible.controller.args" -}}
+- "while true; do sleep 60; done;"
+{{- end }}
+
+{{/*
+Helper function to provide default values for controller readinessProbe if not specified in values.yaml
+*/}}
+{{- define "ansible.controller.readinessProbe" -}}
+exec:
+  command:
+  - /bin/sh
+  - -c
+  - |
+  {{- range .Values.targets }}
+    ssh -i {{ $.Values.controller.home }}/.ssh/id_rsa -q -o StrictHostKeyChecking=no \
+      -o BatchMode=yes -o ConnectTimeout=3 {{ include "ansible.fullname" $ }}-{{ include "ansible.target.name" . }} exit
+  {{- end }}
 initialDelaySeconds: 10
 periodSeconds: 5
 timeoutSeconds: 3
