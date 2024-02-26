@@ -1,0 +1,76 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ansible.fullname" . }}-controller
+  labels:
+    {{- include "ansible.labels" . | nindent 4 }}
+    app.kubernetes.io/component: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ansible.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: controller
+  template:
+    metadata:
+      labels:
+        {{- include "ansible.labels" . | nindent 8 }}
+        app.kubernetes.io/component: controller
+    spec:
+      containers:
+      - name: {{ include "ansible.fullname" . }}-controller
+        image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+        workingDir: {{ .Values.controller.home | default "/home/ansible" }}/workplace
+        command:
+        {{- if not .Values.controller.command }}
+          {{- include "ansible.controller.command" . | nindent 8 }}
+        {{- else }}
+          {{- toYaml .Values.controller.command | nindent 8 }}
+        {{- end }}
+        args:
+        {{- if not .Values.controller.args }}
+          {{- include "ansible.controller.args" . | nindent 8 }}
+        {{- else }}
+          {{- toYaml .Values.controller.args | nindent 8 }}
+        {{- end }}
+        env:
+        - name: ANSIBLE_CONFIG
+          value: {{ .Values.controller.home | default "/home/ansible" }}/workplace/ansible.cfg
+        {{- if .Values.controller.env }}
+          {{- toYaml .Values.controller.env | nindent 8 }}
+        {{- end }}
+        ports:
+        - name: ssh
+          containerPort: 22
+        volumeMounts:
+        - name: ansible-home
+          mountPath: {{ .Values.controller.home | default "/home/ansible" }}/.ssh
+          subPath: .ssh
+        - name: ansible-workplace
+          mountPath: {{ .Values.controller.home | default "/home/ansible" }}/workplace
+        securityContext:
+          runAsUser: {{ .Values.controller.securityContext.runAsUser | default 5000 }}
+          runAsGroup: {{ .Values.controller.securityContext.runAsGroup | default 5000 }}
+        resources:
+          {{- if not .Values.controller.resources }}
+            {{- include "ansible.defaultResources" . | nindent 10 }}
+          {{- else }}
+            {{- toYaml .Values.controller.resources | nindent 10 }}
+          {{- end }}
+        readinessProbe:
+          {{- if not .Values.controller.readinessProbe }}
+            {{- include "ansible.controller.readinessProbe" . | nindent 10 }}
+          {{- else }}
+            {{- toYaml .Values.controller.readinessProbe | nindent 10 }}
+          {{- end }}
+      securityContext:
+        fsGroup: {{ .Values.controller.securityContext.fsGroup | default 5000 }}
+      volumes:
+      - name: ansible-home
+        persistentVolumeClaim:
+          claimName: {{ include "ansible.sharedTargetHome.pvc" . }}
+      - name: ansible-workplace
+        persistentVolumeClaim:
+          claimName: {{ include "ansible.workplace.pvc" . }}
