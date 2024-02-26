@@ -1,0 +1,20 @@
+1. To grab a shell in the controller, execute the following command
+
+    ---
+
+    CONTROLLER=$(kubectl get pods --selector app.kubernetes.io/component=controller -o=jsonpath='{.items[*].metadata.name}')
+    kubectl exec -it $CONTROLLER -- /bin/bash
+
+    ---
+
+Once into the container, you can play around with it by running the ansible commands.
+
+2. To execute a ping command inside the pod, you can just do
+
+    ---
+
+    kubectl exec $CONTROLLER -- ansible all -m ping
+
+    ---
+
+For scenarios, where you would need to debug the target pod, just replace the above selector with `app.kubernetes.io/component=controller`

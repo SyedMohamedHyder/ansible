@@ -1,3 +1,7 @@
+# Overrides to default names being assigned to the resources.
+nameOverride: ""
+fullnameOverride: ""
+
 # PersistentVolumeClaim configuration for sharedTargetHome
 # The target user's .ssh folder is shared with all the pods,
 # thereby generating the ssh certs and setting proper permissions on the .ssh directory. 
