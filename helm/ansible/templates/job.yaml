@@ -27,19 +27,19 @@ spec:
         - |
           echo "Username: $(whoami)"
           echo "UID: $(id -u)"
-          mkdir -p /home/ansible/.ssh/
-          ssh-keygen -q -t rsa -N '' -f /home/ansible/.ssh/id_rsa <<<y >/dev/null 2>&1
+          mkdir -p {{ .Values.controller.home }}/.ssh/
+          ssh-keygen -q -t rsa -N '' -f {{ .Values.controller.home }}/.ssh/id_rsa <<<y >/dev/null 2>&1
           echo "Successfully generated the ssh keys"
-          cp /home/ansible/.ssh/id_rsa.pub /home/ansible/.ssh/authorized_keys
-          chown -R 5000:5000 /home/ansible/.ssh
-          chmod -R 700 /home/ansible/.ssh
+          cp {{ .Values.controller.home }}/.ssh/id_rsa.pub {{ .Values.controller.home }}/.ssh/authorized_keys
+          chown -R {{ .Values.controller.securityContext.runAsUser }}:{{ .Values.controller.securityContext.runAsGroup }} {{ .Values.controller.home }}/.ssh
+          chmod -R 700 {{ .Values.controller.home }}/.ssh
           echo "Updated the permissions of .ssh"
         securityContext:
           runAsUser: 0
           runAsGroup: 0
         volumeMounts:
         - name: ansible-home
-          mountPath: /home/ansible
+          mountPath: {{ .Values.controller.home }}
       volumes:
       - name: ansible-home
         persistentVolumeClaim:

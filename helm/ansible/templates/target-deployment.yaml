@@ -36,11 +36,11 @@ spec:
           containerPort: 22
         volumeMounts:
         - name: ansible-home
-          mountPath: /home/ansible/.ssh
+          mountPath: {{ $.Values.controller.home }}/.ssh
           subPath: .ssh
         securityContext:
-          runAsUser: 5000
-          runAsGroup: 5000
+          runAsUser: {{ $.Values.controller.securityContext.runAsUser }}
+          runAsGroup: {{ $.Values.controller.securityContext.runAsGroup }}
         resources:
           {{- if not $.Values.target.resources }}
             {{- include "ansible.defaultResources" $ | nindent 10 }}
@@ -54,7 +54,7 @@ spec:
             {{- toYaml $.Values.target.readinessProbe | nindent 10 }}
           {{- end }}
       securityContext:
-        fsGroup: 5000
+        fsGroup: {{ $.Values.controller.securityContext.fsGroup }}
       volumes:
       - name: ansible-home
         persistentVolumeClaim:
